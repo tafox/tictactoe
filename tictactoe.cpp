@@ -4,15 +4,21 @@
 
 using namespace std;
 
-
-enum Shape { X, O };
-
 class TicTacToe {
   public:
     static char board[3][5];
+
     void printBoard();
-    void placeShape();
+    char* getShape(int pos);
+    void playerTurn();
+    void computerTurn();
+    bool isGameOver();
+    
+
     char playerShape;
+    char computerShape;
+    char nextTurn;
+    int numberOfTurns;
 };
 
 
@@ -32,61 +38,150 @@ void TicTacToe::printBoard() {
   cout << endl;
 }
 
-void TicTacToe::placeShape() {
-  int pos;
-  cout << "Input position from 1 - 9 to play." << endl;
-  cin >> pos;
+char* TicTacToe::getShape(int pos) {
   switch (pos) {
     case 1:
-      board[0][0] = playerShape;
-      break;
+      return &board[0][0];
     case 2:
-      board[0][2] = playerShape;
-      break;
+      return &board[0][2];
     case 3:
-      board[0][4] = playerShape;
-      break;
+      return &board[0][4];
     case 4:
-      board[1][0] = playerShape;
-      break;
+      return &board[1][0];
     case 5:
-      board[1][2] = playerShape;
-      break;
+      return &board[1][2];
     case 6:
-      board[1][4] = playerShape;
-      break;
+      return &board[1][4];
     case 7:
-      board[2][0] = playerShape;
-      break;
+      return &board[2][0];
     case 8:
-      board[2][2] = playerShape;
-      break;
+      return &board[2][2];
     case 9:
-      board[2][4] = playerShape;
-      break;
+      return &board[2][4];
     default:
       cout << "Error incorrect position." << endl;
+      return NULL;
   }
 }
-      
+
+void TicTacToe::playerTurn() {
+  int pos;
+  bool validMove = false;
+  char* place = NULL;
+  while (!validMove) {  
+    cout << "Input position from 1 - 9 to play." << endl;
+    cin >> pos;
+    if (pos >= 1 && pos <= 9) {
+      place = getShape(pos);
+      if (*place == ' ') {
+        *place = playerShape;
+        validMove = true;
+      } else {
+        cout << "Invalid move." << endl;
+      }
+    } else {
+      cout << "Invalid move." << endl;
+    }
+  }
+  nextTurn = computerShape;
+  numberOfTurns++;
+}
+
+void TicTacToe::computerTurn() {
+  bool validMove = false;
+  char* place;
+  int pos;
+  while (!validMove) {
+    pos = rand() % 10 + 1;
+    if (pos == 10) {
+      pos -= 1;
+    } 
+    place = getShape(pos);
+    if (*place == ' ') {
+      *place = computerShape;
+      validMove = true;
+    }
+  }
+  nextTurn = playerShape;
+  numberOfTurns++;
+}
+
+bool TicTacToe::isGameOver() {
+  bool gameOver = false;
+  int count = 0;
+  
+  if (numberOfTurns >= 9) {
+    gameOver = true;
+  }
+  
+  for (int i = 0; i < 3; i++) {
+    if (board[i][0] != ' ' && board[i][0] == board[i][2] && board[i][0] == board[i][4]) {
+      gameOver = true;
+    }
+  }
+  for (int i = 0; i < 5; i+=2) {
+    if (board[0][i] != ' ' && board[0][i] == board[1][i] && board[0][i] == board[2][i]) {
+      gameOver = true;
+    }
+  }
+  if (board[0][0] != ' ' && board[0][0] == board[1][2] && board[0][0] == board[2][4]) {
+    gameOver = true;
+  }
+  if (board[0][4] != ' ' && board[0][4] == board[1][2] && board[0][4] == board[2][0]) {
+    gameOver = true;
+  }
+  if (gameOver) {
+    if (nextTurn == 'O') {
+      cout << "Xs win!" << endl;
+    } else {
+      cout << "Os win!" << endl;
+    }
+  }
+  return gameOver;
+}
  
 int main(int argc, char* args[]) {
   
+  bool quit = false;
+
+  TicTacToe game;
+
+  int playerShape;
+
   srand(time(NULL));
-
-  Shape playerShape;
-
-  playerShape = static_cast<Shape>(rand() % 2);
+  playerShape = rand() % 2;
   
   cout << "Welcome to Tic-Tac-Toe!" << endl;
-  if (playerShape == X) {
-    cout << "You are Xs." << endl;
+  if (playerShape == 0) {
+    cout << "You are Xs. You go first." << endl;
   } else {
-    cout << "You are Os." << endl;
+    cout << "You are Os. Computer goes first." << endl;
   }
-  TicTacToe game;
-  (playerShape == X) ? game.playerShape = 'X' : game.playerShape = 'O';
    
   game.printBoard();
+
+  if  (playerShape == 0) {
+     game.playerShape = 'X';
+     game.computerShape = 'O';
+     game.playerTurn();
+  } else {
+     game.playerShape = 'O';
+     game.computerShape = 'X';
+     game.computerTurn();
+  }
+  game.numberOfTurns = 0;
+
+  game.printBoard();
+
+  while (!quit) {
+    if ((game.nextTurn == 'O' && game.playerShape == 'O') || (game.nextTurn == 'X' && game.playerShape == 'X')) {
+      game.playerTurn();
+    } else {
+      game.computerTurn();
+    }
+    game.printBoard();
+    quit = game.isGameOver();
+  } 
+  cout << "Game over." << endl;
   return 0;
 }
